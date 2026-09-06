@@ -13,7 +13,8 @@ import {
   TenantApiKeySummary, GenerationParams, defaultGenerationParams,
 } from '@/lib/api'
 
-const API_URL = ''
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const WIDGET_LINK = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://vector-base.b-cdn.net/widget.js'
 
 const RAG_STRICTNESS_OPTIONS = [
   { value: 'no_rag', label: 'No RAG', info: 'Bypasses knowledge base grounding completely.' },
@@ -52,16 +53,36 @@ function saveSessionSecret(id: number, secret: string) {
   sessionStorage.setItem('tenant_known_secrets', JSON.stringify(current))
 }
 
+function widgetEmbedCode(secret: string) {
+  return `<!-- VectorBase AI Chatbot -->
+<script
+  src="${WIDGET_LINK}"
+  data-api-key="${secret}"
+  data-api-url="${API_URL}/api/v1"
+  defer>
+</script>`
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`
+}
+
 function downloadCredentialsCsv(keyInfo: CreatedKeyInfo) {
   const csvRows = [
-    'Key Name,API Key Secret,Allowed Domains,Created At',
-    `"${keyInfo.name.replace(/"/g, '""')}","${keyInfo.secret.replace(/"/g, '""')}","${(keyInfo.domains.length ? keyInfo.domains : ['All origins']).join('; ').replace(/"/g, '""')}","${keyInfo.createdAt}"`,
+    'Key Name,API Key Secret,Allowed Domains,Created At,Widget Embed Code',
+    [
+      keyInfo.name,
+      keyInfo.secret,
+      (keyInfo.domains.length ? keyInfo.domains : ['All origins']).join('; '),
+      keyInfo.createdAt,
+      widgetEmbedCode(keyInfo.secret),
+    ].map(csvCell).join(','),
   ]
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.setAttribute('download', 'credentials.csv')
+  link.setAttribute('download', 'credentials-and-widget-code.csv')
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
@@ -445,7 +466,7 @@ export default function ApiKeysPage() {
       {/* Creation Modal Display */}
       {createdModalKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 border-amber-500/20">
+          <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 border-amber-500/20">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600">
@@ -453,7 +474,7 @@ export default function ApiKeysPage() {
                 </span>
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">API Key Created</h2>
-                  <p className="text-xs text-muted-foreground">Save your secret key now or download credentials.</p>
+                  <p className="text-xs text-muted-foreground">Copy your secret and ready-to-use widget code, or download both together.</p>
                 </div>
               </div>
               <button
@@ -497,13 +518,32 @@ export default function ApiKeysPage() {
               )}
             </div>
 
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground"><Code2 className="size-4 text-primary" /> Your Widget Code</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">This snippet already includes the API key you just created. Paste it before your website’s closing <code className="rounded bg-muted px-1">&lt;/body&gt;</code> tag.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => copy(widgetEmbedCode(createdModalKey.secret), 'modal_widget_code')}
+                  className="h-8 shrink-0 rounded-lg gap-1.5 text-xs"
+                >
+                  {copied === 'modal_widget_code' ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+                  {copied === 'modal_widget_code' ? 'Copied Code!' : 'Copy Code'}
+                </Button>
+              </div>
+              <pre className="mt-3 max-h-44 overflow-auto rounded-lg border border-border bg-background p-3 text-xs leading-5 text-foreground"><code>{widgetEmbedCode(createdModalKey.secret)}</code></pre>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 type="button"
                 onClick={() => downloadCredentialsCsv(createdModalKey)}
                 className="flex-1 h-10 rounded-xl gap-2 font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
               >
-                <Download className="size-4" /> Download credentials.csv
+                <Download className="size-4" /> Download secret &amp; widget code
               </Button>
               <Button
                 type="button"
@@ -517,7 +557,7 @@ export default function ApiKeysPage() {
             </div>
 
             <div className="pt-2 border-t border-border flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Download or copy before closing.</span>
+              <span className="text-xs text-muted-foreground">Download or copy the secret and widget code before closing.</span>
               <Button
                 type="button"
                 variant="ghost"
