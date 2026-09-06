@@ -1,0 +1,168 @@
+VECTORBASE KNOWLEDGE BASE
+
+Document purpose
+
+This document is the primary product knowledge source for VectorBase. VectorBase is a knowledge-grounded AI support platform for teams that want to build, configure, test, and embed customer-support chatbots. The platform connects documents and product knowledge to retrieval-augmented generation, provides tenant-isolated workspaces, exposes a secure chat API, and delivers embeddable chatbot widgets. Use this document to answer questions about VectorBase features, setup, integrations, pricing, billing, payments, security, and troubleshooting.
+
+When answering a customer, prefer the exact names VectorBase, Dashboard, Integration, API Keys, Documents, Playground, Conversations, Billing, Profile, and Docs. Do not invent a feature, price, endpoint, payment status, refund policy, or token balance. If a question requires an account-specific value, such as current token balance, payment status, API key status, or document processing status, explain that the user should check the authenticated VectorBase Dashboard or contact the workspace administrator.
+
+ABOUT VECTORBASE
+
+VectorBase is a multi-tenant RAG control plane. Each customer workspace is isolated from other workspaces. A workspace can upload documents, generate embeddings and searchable chunks, configure retrieval behavior, test answers in a playground, review conversations, create public widget API keys, and embed a chatbot into an external website or product.
+
+The core VectorBase workflow is: connect knowledge sources, process and index documents, configure retrieval and generation behavior, test questions in the Playground, create a restricted API key, embed the widget or call the API, and monitor usage and conversations. VectorBase is designed for support teams, SaaS products, ecommerce businesses, internal knowledge portals, documentation assistants, and other applications that need answers grounded in their own content.
+
+VectorBase does not replace a company’s source-of-truth systems. It retrieves relevant content from the workspace knowledge base and uses that content to produce a grounded response. If a document is missing, outdated, poorly formatted, or not yet processed, the assistant may not be able to answer correctly. Customers should keep their source documents current and should verify important operational, legal, financial, or safety information.
+
+VECTORBASE DASHBOARD AREAS
+
+The Overview page summarizes the workspace and provides quick access to common tasks. It can show token usage, activity, and shortcuts to API Keys, Integration, Documents, and the Playground.
+
+The Documents page is used to upload and manage knowledge sources. Typical sources include PDFs, DOCX files, text files, policies, help-center content, product documentation, FAQs, troubleshooting guides, and internal operating procedures. A document normally moves through upload, extraction, chunking, embedding, and indexing before it is ready for retrieval. A document that is still processing should not be assumed to be searchable.
+
+The API Keys page is used to create and manage tenant API keys. Keys can be restricted to allowed website origins. A raw key secret is sensitive and may be displayed only once when the key is created. Store it in a server-side secret manager or in the deployment configuration of the site that uses the widget. Do not put a private administrative secret in browser code.
+
+The Playground is used to ask test questions against the workspace knowledge base. It is useful for checking retrieval quality, response behavior, citations, history, and token usage before deploying a widget. When comparing answers, use representative customer questions, ambiguous questions, questions with known citations, and questions whose answers are absent from the knowledge base.
+
+The Conversations page is used to review previous chat threads and messages. A conversation has a conversation ID. A follow-up message must send the conversation ID returned by the previous chat request if it is intended to continue the same thread.
+
+The Integration page contains the embed snippet, implementation instructions, API examples, and live widget previews. It can show multiple widget builds. The preview should be tested with an API key that has a known secret and an allowed origin that matches the current preview environment.
+
+The Billing page contains the token plans, the 1M-token add-on, and the Razorpay checkout surface. Current displayed one-time prices are Starter at 10M tokens for INR 249, Growth at 25M tokens for INR 449, Scale at 50M tokens for INR 799, and a 1M-token add-on at INR 29 per 1M-token unit. Prices are product configuration and may change. The server-side catalog must be treated as authoritative.
+
+The Profile page contains workspace profile information and account settings. The Docs page contains API and widget reference material for developers.
+
+KNOWLEDGE BASE AND DOCUMENT INGESTION
+
+VectorBase uses a retrieval-augmented generation workflow. During ingestion, a source document is loaded, text is extracted, split into smaller chunks, transformed into embeddings, and stored in a vector database with metadata. At query time, the user’s question is embedded, similar chunks are retrieved, and the language model receives the retrieved context along with the question and configured instructions.
+
+For LangChain RecursiveCharacterTextSplitter, use recursive splitting rather than cutting every document at an arbitrary character boundary. A practical starting configuration for general support documentation is chunk_size between 800 and 1200 characters and chunk_overlap between 100 and 200 characters. A common starting point is chunk_size=1000 and chunk_overlap=150. Tune the values using retrieval tests; long technical pages may benefit from larger chunks, while short FAQs may benefit from smaller chunks.
+
+Recommended RecursiveCharacterTextSplitter separators are paragraph breaks first, then line breaks, then sentences or spaces, followed by individual characters as a final fallback. In LangChain, a typical configuration is separators=["\n\n", "\n", ". ", " ", ""]. Preserve headings with the text that follows them when possible. A heading such as “Refund Policy” should remain associated with the policy paragraphs below it, because the heading carries important retrieval meaning.
+
+Use metadata for every chunk. Useful metadata includes tenant_id, document_id, document_name, source_type, page_number, section_title, heading_path, version, language, created_at, and source_url. Metadata must never allow retrieval across tenants. Every vector query must be scoped to the authenticated tenant or workspace before similarity ranking is applied.
+
+Good chunks are self-contained enough to answer a focused question. A chunk should normally contain the relevant policy, instructions, conditions, exceptions, and definitions together. Avoid chunks that contain only a heading, only a table row without its column meaning, or only a sentence that refers to information in a different chunk. For tables, convert the table into readable labeled text before splitting, for example: “Plan: Growth. Token allowance: 25 million. Price: INR 449. Billing: one-time.”
+
+Clean documents before ingestion. Remove repeated headers and footers, navigation menus, cookie banners, duplicate page content, broken OCR fragments, tracking parameters, and irrelevant boilerplate. Keep important list numbering, code examples, product names, plan names, endpoint paths, currency values, dates, and error codes. Do not remove negative conditions such as “not included,” “only once,” “requires verification,” or “does not support.”
+
+When a document changes, reprocess the changed document and update its version metadata. Avoid leaving old and new policy versions active together unless the query must support historical dates. If multiple versions are active, include effective dates and retrieve the current version by default.
+
+Recommended ingestion test questions include: “What is VectorBase?”, “How do I create an API key?”, “What are the current token prices?”, “How do I embed the widget?”, “Which header authenticates chat requests?”, “How does Razorpay payment verification work?”, and “What should I do when a widget returns 403?” The expected answer should cite or summarize the relevant chunk and should not invent missing backend behavior.
+
+API AUTHENTICATION AND SECURITY
+
+Tenant dashboard requests use a tenant session token, normally sent as an Authorization Bearer token. Public widget chat requests use the X-API-Key header. Administrative backend requests use an administrative credential that must remain server-side. The browser should communicate with the same-origin application proxy where available; the proxy can inject server-only administrative headers before forwarding to the FastAPI backend.
+
+Never expose FASTAPI_ADMIN_SECRET, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, database credentials, or other private secrets in NEXT_PUBLIC environment variables, frontend JavaScript, an embed snippet, a public repository, or a chatbot response. Only a Razorpay public key ID may be used by the browser to open Razorpay Checkout.
+
+API keys should be treated as credentials. Allowed Domains are origin restrictions such as https://my-site.com or http://localhost:5500. The origin must be configured exactly enough for the backend’s domain validation rules. A key with an allowlist may fail when the request origin is not present in that allowlist. Keys should be revoked when exposed, unused, or associated with a retired deployment.
+
+The platform must enforce tenant isolation on every document, vector, conversation, API key, payment, and token balance query. A tenant must never be able to retrieve another tenant’s documents or conversation history by changing an ID in the URL.
+
+WIDGET INTEGRATION
+
+The VectorBase widget is loaded from the CDN script URL https://vector-base.b-cdn.net/widget.js unless a workspace uses another configured widget build. The standard embed snippet is:
+
+<script
+  src="https://vector-base.b-cdn.net/widget.js"
+  data-api-key="YOUR_PUBLIC_API_KEY"
+  data-api-url="https://your-backend-domain/api/v1"
+  defer>
+</script>
+
+The data-api-key attribute contains the public widget API key. The data-api-url attribute contains the backend API base ending in /api/v1, not the full /chat path. The widget removes a trailing slash and sends messages to POST /api/v1/chat. It sends the API key in the X-API-Key header.
+
+To install the widget, create or select an API key, configure the website origin in Allowed Domains, copy the generated script snippet from Integration, paste it immediately before the closing body tag of the target website, deploy the page, and open the widget bubble. In a Next.js application, load the script after the page becomes interactive or include it in the root layout. Do not include the backend admin secret in the widget configuration.
+
+The live Integration preview uses isolated iframe frames. Each preview must have stable dimensions and should not resize its parent layout on hover. A preview should start a new conversation when the selected API key changes so that a conversation ID from one tenant or key is not reused with another key.
+
+WIDGET CHAT API
+
+The widget sends a POST request to the configured API base plus /chat. The expected endpoint is POST /api/v1/chat. The request uses Content-Type: application/json and X-API-Key. A typical request body is:
+
+{
+  "query": "Where is my order?",
+  "conversation_id": null,
+  "use_rag": true,
+  "use_history": true
+}
+
+The first message can use conversation_id=null or omit the field. The response should include a conversation_id and the assistant response. Follow-up messages should send the returned conversation_id when continuing the same thread. A conversation ID is tenant-scoped and should not be reused with a different API key or tenant.
+
+A typical successful response is:
+
+{
+  "conversation_id": "conv_a1b2c3d4e5f6",
+  "response": "According to the indexed return policy, ..."
+}
+
+The chat API may return 400 for malformed requests, 401 for an invalid or missing API key, 402 when the token balance is exhausted, 403 when the request origin is not allowed, 404 when a conversation does not exist or does not belong to the tenant, and 422 when request validation fails. The exact error detail should be shown safely without exposing internal secrets or stack traces.
+
+DIRECT API USAGE
+
+A server-side application can call the chat endpoint directly. Keep the API key in a server-side environment variable when possible.
+
+const response = await fetch('https://your-backend-domain/api/v1/chat', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': process.env.VECTORBASE_API_KEY
+  },
+  body: JSON.stringify({
+    query: 'What is your return policy?',
+    conversation_id: null,
+    use_rag: true,
+    use_history: true
+  })
+})
+
+const result = await response.json()
+
+For a browser application that should not expose a long-lived API key, use a server-side session-token exchange when supported by the backend. The server should exchange the API key for a short-lived token, and the browser should use the short-lived token according to the backend’s documented authentication contract.
+
+PAYMENTS AND PRICING
+
+VectorBase pricing is based on token capacity. Current displayed one-time prices are: Starter includes 10 million tokens for INR 249; Growth includes 25 million tokens for INR 449; Scale includes 50 million tokens for INR 799; and the Token Add-on provides 1 million tokens for INR 29 per unit. The add-on is repeatable, so a customer can purchase several 1M-token units. These displayed prices are configuration and should be confirmed against the current server-side plan catalog before charging a customer.
+
+Billing uses Razorpay Checkout. The browser may load https://checkout.razorpay.com/v1/checkout.js and open Checkout using a Razorpay public key ID. The current frontend can use a dummy placeholder key for development, such as rzp_test_dummy_replace_me. Before accepting real payments, replace the public key with the real Razorpay test or live public key and implement server-side order creation and payment verification.
+
+A secure payment flow begins when the frontend requests an order from the backend. The frontend must send a product ID, quantity, and idempotency key. The backend looks up the product, calculates the amount in minor currency units, calculates the token credit, creates a local pending purchase, and creates the Razorpay order. The backend returns the local purchase ID, Razorpay order ID, amount, currency, token amount, and public Razorpay key ID.
+
+The frontend opens Razorpay Checkout using the returned order ID. It must not calculate a trusted price from browser data, and it must not credit tokens when the browser-only Razorpay callback fires. After Checkout returns razorpay_payment_id, razorpay_order_id, and razorpay_signature, the frontend sends those values and the local purchase ID to the backend verification endpoint.
+
+The backend verifies the Razorpay signature using RAZORPAY_KEY_SECRET, confirms the order and amount, confirms the purchase belongs to the authenticated tenant, and marks the purchase paid. Only the backend may credit tokens. Payment verification and token crediting must be idempotent so retries cannot add tokens twice.
+
+Razorpay webhooks are required for reliable reconciliation. The webhook endpoint must verify X-Razorpay-Signature using RAZORPAY_WEBHOOK_SECRET, persist the Razorpay event ID, ignore duplicate events, and process events such as payment.captured, payment.failed, order.paid, and refund.created. Webhooks can complete or reconcile a payment when the browser closes before the verification request finishes.
+
+Required server-only payment settings are RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, and RAZORPAY_WEBHOOK_SECRET. RAZORPAY_KEY_ID may be exposed to the browser through a carefully scoped public configuration value. RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET must never be exposed in NEXT_PUBLIC variables or sent to the browser.
+
+The billing API should provide plan discovery, order creation, payment verification, Razorpay webhook processing, billing summary, payment history, and optionally invoice retrieval. Suggested endpoints are GET /api/v1/tenant/billing/plans, POST /api/v1/tenant/billing/orders, POST /api/v1/tenant/billing/payments/verify, POST /api/v1/billing/webhooks/razorpay, GET /api/v1/tenant/billing/summary, GET /api/v1/tenant/billing/payments, and GET /api/v1/tenant/billing/payments/{purchase_id}/invoice.
+
+The order API must reject inactive products, invalid quantities, mismatched currencies, and duplicate idempotency keys with inconsistent payloads. A purchase record should include tenant ID, product ID, quantity, token amount, amount in minor currency units, currency, status, Razorpay order ID, Razorpay payment ID, idempotency key, creation time, paid time, and refund time.
+
+PAYMENT TROUBLESHOOTING
+
+If Razorpay Checkout does not open, confirm that checkout.razorpay.com is reachable, the Checkout script loaded successfully, the public key is present, and the browser console does not show a content-security-policy or script-loading error. A dummy key is expected to fail or show a Razorpay configuration error until it is replaced with a valid Razorpay test key.
+
+If Razorpay reports an invalid amount, verify that the backend sends an integer amount in the smallest currency unit. For INR, INR 249 is sent as amount_minor=24900. Never send a formatted string such as “₹249” to the Razorpay order API.
+
+If payment appears successful in the browser but tokens do not appear, check the server verification response, purchase status, webhook delivery, signature verification logs, and tenant token ledger. A browser success callback alone is not proof that a payment was captured and must not directly increase the balance.
+
+If a webhook is repeatedly retried, inspect the stored event ID, signature verification, JSON parsing, network response status, and database transaction. The webhook should return a successful 2xx response after safely persisting an already-seen event as well as after processing a new event.
+
+If the widget returns 403, add the exact website origin to the API key’s Allowed Domains. If the widget returns 401, check the API key value and whether the key is active. If it returns 402, the workspace token balance is exhausted and the customer should use Billing to purchase additional capacity. If it returns 404 for a follow-up message, clear the stale conversation ID and start a new conversation; the conversation may belong to another tenant, API key, or deleted record.
+
+RESPONSE GUIDELINES FOR THE VECTORBASE CHATBOT
+
+When asked how to start, explain: create a workspace, upload documents, wait for ingestion, test in Playground, create an API key with allowed domains, copy the Integration snippet, and deploy it.
+
+When asked how to add a widget, explain the CDN script, data-api-key, data-api-url ending in /api/v1, defer loading, allowed domains, and the POST /api/v1/chat behavior.
+
+When asked about prices, state the currently configured values: 10M for INR 249, 25M for INR 449, 50M for INR 799, and 1M add-on units for INR 29. Mention that prices may change and the Billing page or server catalog is authoritative.
+
+When asked about payments, explain that Razorpay Checkout is used, a backend order must be created, the payment signature must be verified server-side, webhooks reconcile payment state, and tokens are credited only after successful verified payment. Never ask a customer to provide a Razorpay secret key in chat.
+
+When asked about security, explain tenant isolation, allowed-domain API keys, server-side secrets, short-lived sessions where supported, idempotent payments, webhook signature verification, and the rule that raw private credentials must never be exposed in frontend code.
+
+When the knowledge base does not contain an answer, say that the information is not available in the current VectorBase workspace knowledge base and direct the user to the workspace administrator or official support channel. Do not invent backend endpoints or claim that a payment, refund, token credit, document ingestion job, or account change has completed without an authoritative API result.

@@ -5,7 +5,7 @@ import { Database, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   ApiError, api, extractSessionToken, saveSessionToken,
-  saveTenantDashboard, saveTenantProfile, tenantProfileFromDashboard,
+  getSessionToken, saveTenantDashboard, saveTenantProfile, tenantProfileFromDashboard,
 } from '@/lib/api'
 
 export default function LoginPage() {
@@ -16,6 +16,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (getSessionToken()) {
+      window.location.replace('/dashboard')
+      return
+    }
     if (new URLSearchParams(window.location.search).get('expired') === '1') {
       setError('Your session expired. Sign in again to continue.')
     }

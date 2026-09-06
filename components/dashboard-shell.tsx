@@ -20,6 +20,7 @@ const nav = [
   { href: '/dashboard/playground',     label: 'Playground',    icon: Bot             },
   { href: '/dashboard/conversations',  label: 'Conversations', icon: MessageSquare   },
   { href: '/dashboard/integration',    label: 'Integration',   icon: Code2           },
+  { href: '/dashboard/pricing',        label: 'Billing',       icon: Wallet          },
   { href: '/dashboard/docs',           label: 'Docs',          icon: BookOpen        },
   { href: '/dashboard/profile',        label: 'Profile',       icon: UserRound       },
 ]

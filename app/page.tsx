@@ -45,6 +45,14 @@ const steps = [
   ['04', 'Measure what matters',    'Reports for usage, latency, costs, retrieval quality, and customer satisfaction.'],
 ]
 
+const pricingPlans = [
+  { name: 'Starter', tokens: '10M', price: '₹249', description: 'For prototypes and small support teams.', featured: false },
+  { name: 'Growth', tokens: '25M', price: '₹449', description: 'For growing customer-facing assistants.', featured: true },
+  { name: 'Scale', tokens: '50M', price: '₹799', description: 'For high-volume knowledge workflows.', featured: false },
+]
+
+const tokenAddOn = { tokens: '1M', price: '₹29', description: 'Add extra capacity in repeatable 1M-token units.' }
+
 /* ── Shared components ───────────────────────────────────────────────────── */
 function Logo() {
   return (
@@ -65,9 +73,9 @@ function MarketingNav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Logo />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-          {['#support-agent', '#workflow', '#reports', '#faq'].map((href, i) =>
+          {['#support-agent', '#workflow', '#reports', '#pricing', '#faq'].map((href, i) =>
             <a key={href} href={href} className="hover:text-foreground transition-colors">
-              {['Support agent', 'How it works', 'Reports', 'FAQ'][i]}
+              {['Support agent', 'How it works', 'Reports', 'Pricing', 'FAQ'][i]}
             </a>
           )}
         </nav>
@@ -84,7 +92,7 @@ function MarketingNav() {
       {open && (
         <nav className="border-t border-border bg-card/95 backdrop-blur-sm px-5 py-5 md:hidden">
           <div className="flex flex-col gap-4 text-sm">
-            {[['#support-agent','Support agent'],['#workflow','How it works'],['#reports','Reports'],['#faq','FAQ']].map(([href, label]) =>
+            {[['#support-agent','Support agent'],['#workflow','How it works'],['#reports','Reports'],['#pricing','Pricing'],['#faq','FAQ']].map(([href, label]) =>
               <a key={href} href={href} onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">{label}</a>
             )}
             <hr className="border-border" />
@@ -443,6 +451,44 @@ function CTA() {
     </section>
   )
 }
+    
+function Pricing() {
+  return (
+    <section id="pricing" className="border-t border-border">
+      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-widest text-primary">Simple token pricing</p>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">Choose room to grow.</h2>
+          <p className="mt-6 leading-7 text-muted-foreground">Start small, then add the capacity your support workload needs. Every plan includes the complete vectorbase platform.</p>
+        </div>
+        <div className="mt-12 grid gap-5 lg:grid-cols-3">
+          {pricingPlans.map((plan) => (
+            <article key={plan.name} className={`relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm ${plan.featured ? 'border-primary ring-1 ring-primary/20' : 'border-border'}`}>
+              {plan.featured && <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">Most popular</span>}
+              <p className="text-sm font-semibold">{plan.name}</p>
+              <p className="mt-4 text-4xl font-bold tracking-tight">{plan.tokens}</p>
+              <p className="mt-1 text-xs text-muted-foreground">tokens per top-up</p>
+              <p className="mt-5 min-h-10 text-sm leading-5 text-muted-foreground">{plan.description}</p>
+              <div className="mt-6 border-t border-border pt-5"><span className="text-2xl font-semibold">{plan.price}</span><span className="ml-2 text-xs text-muted-foreground">one-time</span></div>
+              <a href="/register" className={`mt-7 inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-medium transition-colors ${plan.featured ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border border-border bg-background hover:bg-muted'}`}>Get started</a>
+            </article>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-primary">Flexible top-up</p>
+            <p className="mt-2 font-semibold">Need more capacity between plans?</p>
+            <p className="mt-1 text-sm text-muted-foreground">Buy additional tokens repeatedly in 1M-token units.</p>
+          </div>
+          <a href="/register" className="inline-flex h-10 items-center justify-center rounded-xl border border-primary/30 bg-background px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10 sm:shrink-0">Add {tokenAddOn.tokens} for {tokenAddOn.price}</a>
+        </div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Need a custom volume? Contact us for a tailored plan.</p>
+      </div>
+    </section>
+  )
+}
+
+/* ── CTA ────────────────────────────────────────────────────────────────── */
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 function Footer() {
@@ -472,6 +518,7 @@ export default function Page() {
         <Platform />
         <Workflow />
         <Reports />
+        <Pricing />
         <FAQ />
         <CTA />
       </main>
