@@ -63,6 +63,7 @@ export default function IntegrationPage() {
   const selectedWidget = WIDGET_BUILDS.find((build) => build.id === selectedWidgetId) || WIDGET_BUILDS[0]
 
   const snippet = embedSnippet(selectedWidget.url, snippetKeyValue)
+  const snippetLines = snippet.split('\n')
 
   const customRequest = `const response = await fetch('${API_URL}/api/v1/chat/', {
   method: 'POST',
@@ -209,8 +210,8 @@ await fetch('${API_URL}/api/v1/chat/', {
       </div>
 
       {/* Section 1: Code Embed Generator */}
-      <section className="rounded-xl border border-border bg-card shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border p-5">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-border bg-gradient-to-r from-primary/[0.06] via-card to-card p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
               <Code2 className="size-5" />
@@ -222,41 +223,65 @@ await fetch('${API_URL}/api/v1/chat/', {
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/30 px-5 py-3">
+          <div className="flex min-w-0 items-center gap-2">
             <label htmlFor="integration-widget-select" className="sr-only">Widget</label>
             <select
               id="integration-widget-select"
               value={selectedWidgetId}
               onChange={(e) => setSelectedWidgetId(e.target.value)}
-              className="h-9 max-w-44 rounded-xl border border-input bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-ring/60"
+              className="h-8 max-w-44 rounded-lg border border-input bg-background px-2.5 text-xs font-medium outline-none focus:ring-2 focus:ring-ring/60"
             >
               {WIDGET_BUILDS.map((build) => (
                 <option key={build.id} value={build.id}>{build.label}</option>
               ))}
             </select>
+            <span className="rounded-md border border-border bg-background px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">HTML</span>
+          </div>
+          <div className="flex items-center gap-2">
             <label htmlFor="integration-api-key" className="sr-only">API Key</label>
             <input
               id="integration-api-key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Paste API key"
-              className="h-9 w-48 rounded-xl border border-input bg-background px-3 font-mono text-xs outline-none focus:ring-2 focus:ring-ring/60 sm:w-64"
+              className="h-8 w-44 rounded-lg border border-input bg-background px-2.5 font-mono text-[11px] outline-none focus:ring-2 focus:ring-ring/60 sm:w-56"
             />
             <Button
               onClick={copySnippet}
-              variant="outline"
-              className="h-9 rounded-xl gap-1.5 text-xs font-medium"
+              variant={snippetCopied ? 'secondary' : 'default'}
+              className="h-8 rounded-lg gap-1.5 px-3 text-xs font-semibold"
+              aria-label={snippetCopied ? 'Snippet copied' : 'Copy embed code'}
             >
-              {snippetCopied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-              {snippetCopied ? 'Copied Snippet!' : 'Copy Code'}
+              {snippetCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {snippetCopied ? 'Copied' : 'Copy code'}
             </Button>
           </div>
         </div>
 
-        {/* Code Snippet Box */}
-        <pre className="overflow-x-auto p-5 text-xs leading-6 text-foreground font-mono bg-background/50">
-          <code>{snippet}</code>
-        </pre>
+        <div className="bg-[#101827]">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-2.5 text-[10px] text-slate-400 sm:px-7">
+            <div className="flex items-center gap-2">
+              <span className="size-2 rounded-full bg-rose-400/80" />
+              <span className="size-2 rounded-full bg-amber-300/80" />
+              <span className="size-2 rounded-full bg-emerald-400/80" />
+              <span className="ml-2 font-mono">embed.html</span>
+            </div>
+            <span className="font-mono text-slate-500">HTML</span>
+          </div>
+          <pre className="overflow-x-auto px-0 py-5 font-mono text-[11px] leading-6 text-slate-200 sm:py-6 sm:text-xs">
+            <code>
+              {snippetLines.map((line, index) => (
+                <span key={`${index}-${line}`} className="flex min-w-max pr-5 sm:pr-7">
+                  <span className="mr-5 inline-block w-4 select-none text-right text-slate-600">{index + 1}</span>
+                  <span>{line || ' '}</span>
+                </span>
+              ))}
+            </code>
+          </pre>
+        </div>
 
         {/* Instructions */}
         <div className="border-t border-border p-5">
@@ -282,7 +307,7 @@ await fetch('${API_URL}/api/v1/chat/', {
             <div>
               <h2 className="font-semibold text-lg">Live Widget Gallery</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Each configured widget is previewed below in its own isolated frame — no overlap with the global chatbot.
+                Pick a build to preview it in an isolated frame, or compare every configured build at once.
               </p>
             </div>
           </div>
@@ -290,34 +315,47 @@ await fetch('${API_URL}/api/v1/chat/', {
 
         <div className="space-y-6 p-5">
           <div className="grid gap-6 lg:grid-cols-[190px_minmax(0,1fr)]">
-            <fieldset className="h-fit rounded-xl border border-border bg-muted/20 p-4">
-              <legend className="px-1 text-xs font-semibold text-foreground">Preview widget</legend>
-              <div className="mt-2 space-y-2">
+            <fieldset className="h-fit rounded-2xl border border-border bg-gradient-to-b from-primary/[0.07] via-card to-card p-3 shadow-sm">
+              <legend className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Preview mode</legend>
+              <div className="mt-2 space-y-1.5">
                 {WIDGET_BUILDS.map((build) => (
-                  <label key={build.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs text-muted-foreground transition hover:bg-background hover:text-foreground">
+                  <label
+                    key={build.id}
+                    className={`group flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-xs transition-all ${previewWidgetId === build.id ? 'border-primary/30 bg-primary/10 text-foreground shadow-sm' : 'border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground'}`}
+                  >
                     <input
                       type="radio"
                       name="preview-widget"
                       value={build.id}
                       checked={previewWidgetId === build.id}
                       onChange={() => setPreviewWidgetId(build.id)}
-                      className="size-3.5 accent-primary"
+                      className="peer sr-only"
                     />
-                    <span>{build.label}</span>
+                    <span className={`grid size-4 shrink-0 place-items-center rounded-full border-2 transition-colors ${previewWidgetId === build.id ? 'border-primary bg-primary' : 'border-muted-foreground/35 group-hover:border-primary/50'}`}>
+                      <span className={`size-1.5 rounded-full bg-primary-foreground transition-opacity ${previewWidgetId === build.id ? 'opacity-100' : 'opacity-0'}`} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{build.label}</span>
+                    {previewWidgetId === build.id && <Check className="size-3.5 text-primary" />}
                   </label>
                 ))}
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs text-muted-foreground transition hover:bg-background hover:text-foreground">
+                <div className="my-2 border-t border-border/70" />
+                <label className={`group flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-xs transition-all ${previewWidgetId === 'all' ? 'border-sky-500/30 bg-sky-500/10 text-foreground shadow-sm' : 'border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground'}`}>
                   <input
                     type="radio"
                     name="preview-widget"
                     value="all"
                     checked={previewWidgetId === 'all'}
                     onChange={() => setPreviewWidgetId('all')}
-                    className="size-3.5 accent-primary"
+                    className="peer sr-only"
                   />
-                  <span>Show all</span>
+                  <span className={`grid size-4 shrink-0 place-items-center rounded-full border-2 transition-colors ${previewWidgetId === 'all' ? 'border-sky-500 bg-sky-500' : 'border-muted-foreground/35 group-hover:border-sky-500/50'}`}>
+                    <span className={`size-1.5 rounded-full bg-white transition-opacity ${previewWidgetId === 'all' ? 'opacity-100' : 'opacity-0'}`} />
+                  </span>
+                  <span className="min-w-0 flex-1 font-medium">Show all</span>
+                  {previewWidgetId === 'all' && <Check className="size-3.5 text-sky-600" />}
                 </label>
               </div>
+              <p className="mt-3 px-2 text-[10px] leading-4 text-muted-foreground">{previewWidgetId === 'all' ? 'Comparing all available builds.' : 'Showing one selected build.'}</p>
             </fieldset>
 
             <div className="grid grid-cols-1 justify-items-center gap-6 overflow-x-auto pb-4 sm:grid-cols-2">
