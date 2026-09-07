@@ -52,7 +52,6 @@ export default function RootLayout({
           <script
             src={process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://vector-base.b-cdn.net/widget.js'}
             data-api-key={process.env.NEXT_PUBLIC_PUBLIC_KEY}
-            data-api-url={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1`}
             defer
           />
         )}

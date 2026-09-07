@@ -64,7 +64,6 @@ export default function DocsPage() {
 <script
   src="${WIDGET_LINK}"
   data-api-key="YOUR_PUBLIC_API_KEY"
-  data-api-url="${API_URL}/api/v1"
   defer>
 </script>`
 
@@ -183,7 +182,6 @@ await fetch('${API_URL}/api/v1/chat/', {
               <tbody>
                 {[
                   ['data-api-key', 'Yes', 'Your public API key secret'],
-                  ['data-api-url', 'Yes', `Your backend base URL — ${API_URL}/api/v1`],
                   ['data-title', 'No', 'Widget header title (default: "Support")'],
                   ['data-placeholder', 'No', 'Input placeholder text'],
                   ['data-theme', 'No', '"light" or "dark" (default: auto)'],

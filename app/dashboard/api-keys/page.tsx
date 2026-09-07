@@ -58,7 +58,6 @@ function widgetEmbedCode(secret: string) {
 <script
   src="${WIDGET_LINK}"
   data-api-key="${secret}"
-  data-api-url="${API_URL}/api/v1"
   defer>
 </script>`
 }

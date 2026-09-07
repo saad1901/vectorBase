@@ -8,7 +8,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ApiError, api, TenantApiKeySummary } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -36,73 +35,34 @@ const WIDGET_BUILDS: WidgetBuild[] = configuredWidgetBuilds.length
   ? configuredWidgetBuilds
   : [{ id: 'default', label: 'Default widget', url: CDN_SCRIPT }]
 
-function getSessionSecrets(): Record<number, string> {
-  if (typeof window === 'undefined') return {}
-  try {
-    return JSON.parse(sessionStorage.getItem('tenant_known_secrets') || '{}')
-  } catch {
-    return {}
-  }
-}
-
-function embedSnippet(apiKey: string) {
+function embedSnippet(widgetUrl: string, apiKey: string) {
   return `<!-- VectorBase AI Chatbot Embed -->
 <script
-  src="${CDN_SCRIPT}"
+  src="${widgetUrl}"
   data-api-key="${apiKey}"
-  data-api-url="${API_URL}/api/v1"
   defer>
 </script>`
 }
 
 export default function IntegrationPage() {
   const [integrationType, setIntegrationType] = useState<'widget' | 'custom' | 'mcp' | 'rag'>('widget')
-  const [keys, setKeys] = useState<TenantApiKeySummary[]>([])
-  const [keysLoading, setKeysLoading] = useState(true)
-  const [keysError, setKeysError] = useState('')
-
-  const [knownSecrets, setKnownSecrets] = useState<Record<number, string>>({})
-  const [selectedSnippetId, setSelectedSnippetId] = useState<string>('')
+  const [apiKey, setApiKey] = useState('')
+  const [selectedWidgetId, setSelectedWidgetId] = useState(WIDGET_BUILDS[0]?.id || '')
+  const [previewWidgetId, setPreviewWidgetId] = useState(WIDGET_BUILDS[0]?.id || '')
   const [snippetCopied, setSnippetCopied] = useState(false)
 
   const [customCopied, setCustomCopied] = useState<'request' | 'conversation' | 'token' | null>(null)
-
-  const [previewKeyId, setPreviewKeyId] = useState<string>('')
-  const [manualPreviewKey, setManualPreviewKey] = useState('')
 
   const [origin, setOrigin] = useState('')
 
   useEffect(() => {
     setOrigin(window.location.origin)
-    setKnownSecrets(getSessionSecrets())
   }, [])
 
-  async function loadKeys() {
-    setKeysLoading(true)
-    setKeysError('')
-    try {
-      const activeKeys = await api.tenantApiKeys()
-      setKeys(activeKeys)
-      if (activeKeys.length > 0 && !selectedSnippetId) {
-        setSelectedSnippetId(String(activeKeys[0].id))
-        setPreviewKeyId(String(activeKeys[0].id))
-      }
-    } catch (err) {
-      setKeysError(err instanceof ApiError ? err.message : 'Could not load API keys.')
-    } finally {
-      setKeysLoading(false)
-    }
-  }
+  const snippetKeyValue = apiKey.trim() || 'YOUR_PUBLIC_API_KEY'
+  const selectedWidget = WIDGET_BUILDS.find((build) => build.id === selectedWidgetId) || WIDGET_BUILDS[0]
 
-  useEffect(() => {
-    loadKeys()
-  }, [])
-
-  const snippetKeyValue = selectedSnippetId
-    ? knownSecrets[Number(selectedSnippetId)] ?? 'YOUR_PUBLIC_API_KEY'
-    : 'YOUR_PUBLIC_API_KEY'
-
-  const snippet = embedSnippet(snippetKeyValue)
+  const snippet = embedSnippet(selectedWidget.url, snippetKeyValue)
 
   const customRequest = `const response = await fetch('${API_URL}/api/v1/chat/', {
   method: 'POST',
@@ -160,15 +120,15 @@ await fetch('${API_URL}/api/v1/chat/', {
     setTimeout(() => setCustomCopied(null), 2000)
   }
 
-  const selectedKeyHasSecret = previewKeyId ? Boolean(knownSecrets[Number(previewKeyId)]) : false
-  const resolvedPreviewSecret = previewKeyId
-    ? knownSecrets[Number(previewKeyId)] ?? manualPreviewKey.trim()
-    : manualPreviewKey.trim()
+  const resolvedPreviewSecret = apiKey.trim()
+  const previewWidgets = previewWidgetId === 'all'
+    ? WIDGET_BUILDS
+    : WIDGET_BUILDS.filter((build) => build.id === previewWidgetId)
 
   useEffect(() => {
-    if (integrationType !== 'widget' || keysLoading) return
+    if (integrationType !== 'widget') return
     // Widgets are shown in iframes below — no global script injection needed
-  }, [integrationType, keysLoading, resolvedPreviewSecret])
+  }, [integrationType, resolvedPreviewSecret])
   return (
     <div className="space-y-8 rounded-2xl bg-gradient-to-b from-primary/[0.035] via-transparent to-transparent p-1 sm:p-2">
       {/* Header */}
@@ -262,25 +222,26 @@ await fetch('${API_URL}/api/v1/chat/', {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5">
-              <label htmlFor="snippet-key-select" className="text-xs text-muted-foreground hidden sm:inline">
-                API Key:
-              </label>
-              <select
-                id="snippet-key-select"
-                value={selectedSnippetId}
-                onChange={(e) => setSelectedSnippetId(e.target.value)}
-                className="h-9 rounded-xl border border-input bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-ring/60"
-              >
-                <option value="">Placeholder (YOUR_PUBLIC_API_KEY)</option>
-                {keys.map((k) => (
-                  <option key={k.id} value={String(k.id)}>
-                    {k.key_name || `Key #${k.id}`} {knownSecrets[k.id] ? '✓' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label htmlFor="integration-widget-select" className="sr-only">Widget</label>
+            <select
+              id="integration-widget-select"
+              value={selectedWidgetId}
+              onChange={(e) => setSelectedWidgetId(e.target.value)}
+              className="h-9 max-w-44 rounded-xl border border-input bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-ring/60"
+            >
+              {WIDGET_BUILDS.map((build) => (
+                <option key={build.id} value={build.id}>{build.label}</option>
+              ))}
+            </select>
+            <label htmlFor="integration-api-key" className="sr-only">API Key</label>
+            <input
+              id="integration-api-key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Paste API key"
+              className="h-9 w-48 rounded-xl border border-input bg-background px-3 font-mono text-xs outline-none focus:ring-2 focus:ring-ring/60 sm:w-64"
+            />
             <Button
               onClick={copySnippet}
               variant="outline"
@@ -328,50 +289,47 @@ await fetch('${API_URL}/api/v1/chat/', {
         </div>
 
         <div className="space-y-6 p-5">
-          {/* API key selector */}
-          <div className="mt-4 flex flex-wrap items-end gap-3">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-medium mb-1.5">
-                API Key <span className="font-normal text-muted-foreground">(for preview)</span>
-              </label>
-              <select
-                value={previewKeyId}
-                onChange={(e) => setPreviewKeyId(e.target.value)}
-                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/60"
-              >
-                <option value="">No key — widgets show their default state</option>
-                {keys.map((k) => (
-                  <option key={k.id} value={String(k.id)}>
-                    {k.key_name || `Key #${k.id}`}{knownSecrets[k.id] ? ' ✓ (Secret Ready)' : ''}
-                  </option>
+          <div className="grid gap-6 lg:grid-cols-[190px_minmax(0,1fr)]">
+            <fieldset className="h-fit rounded-xl border border-border bg-muted/20 p-4">
+              <legend className="px-1 text-xs font-semibold text-foreground">Preview widget</legend>
+              <div className="mt-2 space-y-2">
+                {WIDGET_BUILDS.map((build) => (
+                  <label key={build.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs text-muted-foreground transition hover:bg-background hover:text-foreground">
+                    <input
+                      type="radio"
+                      name="preview-widget"
+                      value={build.id}
+                      checked={previewWidgetId === build.id}
+                      onChange={() => setPreviewWidgetId(build.id)}
+                      className="size-3.5 accent-primary"
+                    />
+                    <span>{build.label}</span>
+                  </label>
                 ))}
-              </select>
-            </div>
-            {previewKeyId && !selectedKeyHasSecret && (
-              <div className="flex-1 min-w-[220px]">
-                <label className="block text-xs font-medium mb-1.5">
-                  Paste Secret <span className="text-muted-foreground">(not recoverable from previous sessions)</span>
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs text-muted-foreground transition hover:bg-background hover:text-foreground">
+                  <input
+                    type="radio"
+                    name="preview-widget"
+                    value="all"
+                    checked={previewWidgetId === 'all'}
+                    onChange={() => setPreviewWidgetId('all')}
+                    className="size-3.5 accent-primary"
+                  />
+                  <span>Show all</span>
                 </label>
-                <input
-                  value={manualPreviewKey}
-                  onChange={(e) => setManualPreviewKey(e.target.value)}
-                  placeholder="pk_live_xxxx…"
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3 font-mono text-xs outline-none focus:ring-2 focus:ring-ring/60"
-                />
               </div>
-            )}
-          </div>
+            </fieldset>
 
-          <div className="mt-8 grid grid-cols-1 justify-items-center gap-6 pb-4 sm:grid-cols-2 xl:grid-cols-3">
-            {WIDGET_BUILDS.map((build) => {
+            <div className="grid grid-cols-1 justify-items-center gap-6 overflow-x-auto pb-4 sm:grid-cols-2">
+            {previewWidgets.map((build) => {
               const apiKey = resolvedPreviewSecret || 'YOUR_API_KEY'
               const iframeHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 520px; overflow: hidden; background: transparent; }
+    html { width: 100%; height: 760px; min-height: 760px; overflow: hidden; background: transparent; }
+    body { width: 100%; height: 760px; min-height: 760px; margin: 0; overflow: hidden; background: transparent; }
   </style>
 </head>
 <body>
@@ -379,17 +337,17 @@ await fetch('${API_URL}/api/v1/chat/', {
     localStorage.removeItem('vb_active_convo_id');
     localStorage.removeItem('vb_chat_history');
   </script>
-  <script src="${build.url}" data-api-key="${apiKey}" data-api-url="${API_URL}/api/v1" defer></script>
+  <script src="${build.url}" data-api-key="${apiKey}" defer></script>
 </body>
 </html>`
 
               return (
-                <div key={`${build.id}-${apiKey}`} className="w-full max-w-[380px]">
-                  <div className="h-[520px] w-full overflow-hidden rounded-xl border border-border bg-muted/20 shadow-sm">
+                <div key={`${build.id}-${apiKey}`} className="w-full max-w-[520px] min-w-0">
+                  <div className="h-[760px] min-h-[760px] w-full overflow-hidden rounded-xl border border-border bg-muted/20 shadow-sm">
                     <iframe
                       srcDoc={iframeHtml}
                       title={build.label}
-                      className="block h-[520px] w-full border-0"
+                      className="block h-[760px] min-h-[760px] min-w-[500px] w-full border-0"
                       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                       scrolling="no"
                     />
@@ -402,13 +360,14 @@ await fetch('${API_URL}/api/v1/chat/', {
                 </div>
               )
             })}
+            </div>
           </div>
 
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1.5">
             <p className="font-semibold text-foreground">Troubleshooting</p>
             <ul className="list-disc list-inside space-y-1">
-              <li><strong className="text-foreground">403 Forbidden:</strong> Add <code className="rounded bg-muted px-1">{origin || 'your origin'}</code> to the key's Allowed Domains.</li>
-              <li><strong className="text-foreground">Widget not appearing:</strong> The script may need the correct API key — select a key with a known secret above.</li>
+              <li><strong className="text-foreground">403 Forbidden:</strong> Add your origin to the key&apos;s Allowed Domains.</li>
+              <li><strong className="text-foreground">Widget not appearing:</strong> The script may need the correct API key — paste a valid key above.</li>
               <li><strong className="text-foreground">402 Payment Required:</strong> Token balance exhausted — top up in Profile &amp; Billing.</li>
             </ul>
           </div>

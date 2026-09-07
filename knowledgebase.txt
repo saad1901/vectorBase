@@ -26,7 +26,7 @@ The Playground is used to ask test questions against the workspace knowledge bas
 
 The Conversations page is used to review previous chat threads and messages. A conversation has a conversation ID. A follow-up message must send the conversation ID returned by the previous chat request if it is intended to continue the same thread.
 
-The Integration page contains the embed snippet, implementation instructions, API examples, and live widget previews. It can show multiple widget builds. The preview should be tested with an API key that has a known secret and an allowed origin that matches the current preview environment.
+The Integration page contains the embed snippet, implementation instructions, API examples, and live widget previews. It can show multiple widget builds. Enter the widget API key directly, choose the widget build, and copy the generated snippet. The preview should be tested with a valid API key and an allowed origin that matches the current preview environment.
 
 The Billing page contains the token plans, the 1M-token add-on, and the Razorpay checkout surface. Current displayed one-time prices are Starter at 10M tokens for INR 249, Growth at 25M tokens for INR 449, Scale at 50M tokens for INR 799, and a 1M-token add-on at INR 29 per 1M-token unit. Prices are product configuration and may change. The server-side catalog must be treated as authoritative.
 
@@ -67,15 +67,14 @@ The VectorBase widget is loaded from the CDN script URL https://vector-base.b-cd
 <script
   src="https://vector-base.b-cdn.net/widget.js"
   data-api-key="YOUR_PUBLIC_API_KEY"
-  data-api-url="https://your-backend-domain/api/v1"
   defer>
 </script>
 
-The data-api-key attribute contains the public widget API key. The data-api-url attribute contains the backend API base ending in /api/v1, not the full /chat path. The widget removes a trailing slash and sends messages to POST /api/v1/chat. It sends the API key in the X-API-Key header.
+The data-api-key attribute contains the public widget API key. The widget has its backend API URL built in and only needs the API key attribute in the embed script. It sends messages to POST /api/v1/chat and includes the API key in the X-API-Key header.
 
-To install the widget, create or select an API key, configure the website origin in Allowed Domains, copy the generated script snippet from Integration, paste it immediately before the closing body tag of the target website, deploy the page, and open the widget bubble. In a Next.js application, load the script after the page becomes interactive or include it in the root layout. Do not include the backend admin secret in the widget configuration.
+To install the widget, create an API key, configure the website origin in Allowed Domains, enter the key on Integration, choose the required widget build, copy the generated script snippet, paste it immediately before the closing body tag of the target website, deploy the page, and open the widget bubble. In a Next.js application, load the script after the page becomes interactive or include it in the root layout. Do not include the backend admin secret in the widget configuration.
 
-The live Integration preview uses isolated iframe frames. Each preview must have stable dimensions and should not resize its parent layout on hover. A preview should start a new conversation when the selected API key changes so that a conversation ID from one tenant or key is not reused with another key.
+The live Integration preview uses isolated iframe frames for each configured widget build. Each preview must have stable dimensions and should not resize its parent layout on hover. The preview uses the API key entered in the Integration page and starts with a fresh conversation state when it is reloaded.
 
 WIDGET CHAT API
 
@@ -157,7 +156,7 @@ RESPONSE GUIDELINES FOR THE VECTORBASE CHATBOT
 
 When asked how to start, explain: create a workspace, upload documents, wait for ingestion, test in Playground, create an API key with allowed domains, copy the Integration snippet, and deploy it.
 
-When asked how to add a widget, explain the CDN script, data-api-key, data-api-url ending in /api/v1, defer loading, allowed domains, and the POST /api/v1/chat behavior.
+When asked how to add a widget, explain the CDN script, data-api-key, the built-in backend API URL, defer loading, allowed domains, and the POST /api/v1/chat behavior. The generated script only needs the CDN URL, API key, and defer loading.
 
 When asked about prices, state the currently configured values: 10M for INR 249, 25M for INR 449, 50M for INR 799, and 1M add-on units for INR 29. Mention that prices may change and the Billing page or server catalog is authoritative.
 
