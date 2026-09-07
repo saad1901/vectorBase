@@ -246,7 +246,7 @@ export default function ApiKeysPage() {
   function openEditModal(key: TenantApiKeySummary) {
     setEditingKey(key)
     setEditLabel(key.key_name || '')
-    setEditDomains(key.allowed_domains || [])
+    setEditDomains(key.allowed_domains?.length ? key.allowed_domains : ['*'])
     setEditDomainInput('')
     setEditSystemPrompt(key.system_prompt || '')
     setEditGenParams(key.generation_params ? { ...key.generation_params } : { ...defaultGenerationParams })
@@ -284,10 +284,10 @@ export default function ApiKeysPage() {
     setSavingEdit(true)
     try {
       const updatedName = editLabel.trim() || 'Production API Key'
-      const updatedPrompt = editSystemPrompt.trim() || undefined
+      const updatedPrompt = editSystemPrompt.trim()
 
       await api.tenantUpdateApiKey(editingKey.id, {
-        key_name: updatedName,
+        name: updatedName,
         allowed_domains: domainsToSend,
         system_prompt: updatedPrompt,
         generation_params: editGenParams,
@@ -298,7 +298,7 @@ export default function ApiKeysPage() {
           ...k,
           key_name: updatedName,
           allowed_domains: finalDomains,
-          system_prompt: editSystemPrompt.trim() || null,
+          system_prompt: updatedPrompt || null,
           generation_params: editGenParams,
         } : k)),
       )
@@ -890,7 +890,6 @@ export default function ApiKeysPage() {
             <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-5 py-3">Key Name</th>
-                <th className="px-5 py-3">Prefix</th>
                 <th className="px-5 py-3">Allowed Domains</th>
                 <th className="px-5 py-3">AI Settings</th>
                 <th className="px-5 py-3">Status</th>
@@ -902,7 +901,7 @@ export default function ApiKeysPage() {
             <tbody className="divide-y divide-border">
               {loadingKeys && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-5 py-8 text-center text-sm text-muted-foreground">
                     <Loader2 className="mx-auto mb-2 size-5 animate-spin text-primary" />
                     Loading API keys…
                   </td>
@@ -910,7 +909,7 @@ export default function ApiKeysPage() {
               )}
               {!loadingKeys && keys.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-5 py-8 text-center text-sm text-muted-foreground">
                     No API keys created yet. Generate one above.
                   </td>
                 </tr>
@@ -937,7 +936,6 @@ export default function ApiKeysPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{key.prefix}</td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
                         {key.allowed_domains?.length ? (

@@ -43,6 +43,15 @@ export const api = {
   tenantPost: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) }),
   tenantDashboard: () => request<TenantDashboardResponse>('/api/v1/tenant/dashboard'),
   tenantApiKeys: () => request<TenantApiKeySummary[]>('/api/v1/tenant/dashboard/apikeys'),
+  tenantApiLogs: (params?: { page?: number; limit?: number; statusCode?: number; keyId?: number }) => {
+    const query = new URLSearchParams()
+    if (params?.page !== undefined) query.set('page', String(params.page))
+    if (params?.limit !== undefined) query.set('limit', String(params.limit))
+    if (params?.statusCode !== undefined) query.set('status_code', String(params.statusCode))
+    if (params?.keyId !== undefined) query.set('key_id', String(params.keyId))
+    const qs = query.toString()
+    return request<TenantApiLogResponse>(`/api/v1/tenant/apilogs${qs ? `?${qs}` : ''}`)
+  },
   // Document job endpoints
   uploadDocument: (file: File) => {
     const form = new FormData()
@@ -124,7 +133,8 @@ export const api = {
   tenantUpdateApiKey: (
     id: number,
     body: {
-      key_name?: string
+      name?: string
+      is_active?: boolean
       allowed_domains?: string[]
       system_prompt?: string
       generation_params?: GenerationParams
@@ -297,6 +307,25 @@ export type TenantUsageResponse = TenantUsageRow[] | {
   rows?: TenantUsageRow[]
   items?: TenantUsageRow[]
   results?: TenantUsageRow[]
+}
+
+export type TenantApiLog = {
+  id?: number | string
+  timestamp?: string | null
+  key_name?: string | null
+  status_code?: number | string | null
+  error_message?: string | null
+  msg?: string | null
+  message?: string | null
+}
+
+export type TenantApiLogResponse = TenantApiLog[] | {
+  total?: number
+  page?: number
+  limit?: number
+  logs?: TenantApiLog[]
+  items?: TenantApiLog[]
+  results?: TenantApiLog[]
 }
 
 export type TenantCreateApiKeyResponse = {

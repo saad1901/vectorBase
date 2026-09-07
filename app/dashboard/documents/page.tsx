@@ -9,6 +9,7 @@ import {
   Clock,
   FileText,
   Loader2,
+  PenLine,
   RefreshCw,
   Search,
   ServerCrash,
@@ -78,6 +79,9 @@ export default function DocumentsPage() {
   const [uploadError, setUploadError] = useState('')
   // drag-over state
   const [dragging, setDragging] = useState(false)
+  const [inputMode, setInputMode] = useState<'upload' | 'write'>('upload')
+  const [textTitle, setTextTitle] = useState('')
+  const [textDraft, setTextDraft] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   // track which job ids are still active so we know when to keep polling
   const activeJobIds = useRef<Set<string>>(new Set())
@@ -194,10 +198,24 @@ export default function DocumentsPage() {
   }
 
   // ── handle file selection ─────────────────────────────────────────────────
-  function addFiles(fileList: FileList | null) {
+  function addFiles(fileList: FileList | File[] | null) {
     if (!fileList || fileList.length === 0) return
     setUploadError('')
-    const next: StagedFile[] = Array.from(fileList).map((file) => ({
+    const supportedFiles = Array.from(fileList).filter((file) => {
+      const filename = file.name.toLowerCase()
+      return filename.endsWith('.pdf') || filename.endsWith('.txt')
+    })
+
+    if (supportedFiles.length === 0) {
+      setUploadError('Only PDF and TXT files can be added to the ingestion queue.')
+      return
+    }
+
+    if (supportedFiles.length < fileList.length) {
+      setUploadError('Some files were skipped. Only PDF and TXT files can be added.')
+    }
+
+    const next: StagedFile[] = supportedFiles.map((file) => ({
       file,
       jobId: null,
       localStatus: 'pending',
@@ -210,6 +228,23 @@ export default function DocumentsPage() {
     addFiles(event.target.files)
     // reset so the same file can be picked again
     event.target.value = ''
+  }
+
+  function stageText() {
+    const text = textDraft.trim()
+    if (!text) {
+      setUploadError('Enter some text before adding it to the upload queue.')
+      return
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const titleBase = textTitle.trim().replace(/ /g, '').replace(/[\\/:*?"<>|]/g, '-').replace(/\.[^.]+$/, '').trim()
+    const filename = `${titleBase || `text-${timestamp}`}.txt`
+    const textFile = new File([text], filename, { type: 'text/plain' })
+    addFiles([textFile])
+    setTextTitle('')
+    setTextDraft('')
+    setInputMode('upload')
   }
 
   // ── drag & drop ───────────────────────────────────────────────────────────
@@ -352,7 +387,7 @@ export default function DocumentsPage() {
         <p className="font-mono text-xs uppercase tracking-[0.22em] text-primary">Knowledge base</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Documents</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Upload PDFs and text files — each file is queued as a background job for chunking, embedding, and vector indexing.
+          Add knowledge by writing text or uploading PDF and TXT files. Everything is queued for chunking, embedding, and vector indexing.
         </p>
       </div>
 
@@ -365,27 +400,85 @@ export default function DocumentsPage() {
       {/* ── upload zone + staged list ── */}
       <section className="grid gap-4 lg:grid-cols-[1fr_340px]">
         <div className="rounded-lg border border-border bg-card">
-          {/* drop zone */}
-          <div
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-            onClick={() => inputRef.current?.click()}
-            className={`m-5 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-5 py-12 text-center transition
-              ${dragging ? 'border-primary bg-primary/10' : 'border-border bg-background hover:border-primary hover:bg-primary/5'}`}
-          >
-            <UploadCloud className={`size-10 transition ${dragging ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className="mt-4 text-sm font-medium">Drop PDFs or TXT files here, or click to browse</span>
-            <span className="mt-1 text-xs text-muted-foreground">PDF, TXT, Markdown — policy exports, product docs, FAQs</span>
-            <input
-              ref={inputRef}
-              type="file"
-              multiple
-              accept=".pdf,.txt,.md,text/plain,application/pdf"
-              onChange={onInputChange}
-              className="sr-only"
-            />
+          <div className="flex border-b border-border p-2" role="tablist" aria-label="Knowledge input method">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={inputMode === 'upload'}
+              onClick={() => setInputMode('upload')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${inputMode === 'upload' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+            >
+              <UploadCloud className="size-4" />Upload files
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={inputMode === 'write'}
+              onClick={() => setInputMode('write')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${inputMode === 'write' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+            >
+              <PenLine className="size-4" />Write text
+            </button>
           </div>
+
+          {inputMode === 'upload' ? (
+            <div
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              onClick={() => inputRef.current?.click()}
+              className={`m-5 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-5 py-12 text-center transition
+                ${dragging ? 'border-primary bg-primary/10' : 'border-border bg-background hover:border-primary hover:bg-primary/5'}`}
+            >
+              <UploadCloud className={`size-10 transition ${dragging ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="mt-4 text-sm font-medium">Drop PDF or TXT files here, or click to browse</span>
+              <span className="mt-1 text-xs text-muted-foreground">PDF or TXT files only</span>
+              <input
+                ref={inputRef}
+                type="file"
+                multiple
+                accept=".pdf,.txt,text/plain,application/pdf"
+                onChange={onInputChange}
+                className="sr-only"
+              />
+            </div>
+          ) : (
+            <div className="m-5 space-y-4">
+              <div>
+                <label htmlFor="text-title" className="text-sm font-medium">Title / file name <span className="font-normal text-muted-foreground">(optional)</span></label>
+                <input
+                  id="text-title"
+                  value={textTitle}
+                  onChange={(event) => setTextTitle(event.target.value)}
+                  placeholder="e.g. support-faq"
+                  className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60"
+                />
+                <label htmlFor="text-ingestion" className="mt-4 block text-sm font-medium">Text to ingest</label>
+                <p className="mt-1 text-xs text-muted-foreground">Your text will be packaged as a TXT file and sent through the same ingestion endpoint.</p>
+              </div>
+              <textarea
+                id="text-ingestion"
+                value={textDraft}
+                onChange={(event) => {
+                  setTextDraft(event.target.value)
+                  if (uploadError) setUploadError('')
+                }}
+                placeholder="Paste product notes, FAQs, policies, or other knowledge here…"
+                rows={10}
+                className="w-full resize-y rounded-lg border border-input bg-background px-3 py-3 text-sm leading-6 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={stageText}
+                  disabled={!textDraft.trim()}
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <FileText className="size-4" />Add text to queue
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* staged file list */}
           {staged.length > 0 && (

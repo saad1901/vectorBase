@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Bot, BookOpen, Code2, Database, FileText, KeyRound,
+  Bot, BookOpen, Code2, Database, FileText, KeyRound, ScrollText,
   LayoutDashboard, LogOut, Menu, MessageSquare, Settings,
   Sparkles, UserRound, Wallet, X, ChevronRight,
 } from 'lucide-react'
@@ -17,6 +17,7 @@ const nav = [
   { href: '/dashboard',               label: 'Overview',      icon: LayoutDashboard },
   { href: '/dashboard/documents',      label: 'Documents',     icon: FileText        },
   { href: '/dashboard/api-keys',       label: 'API keys',      icon: KeyRound        },
+  { href: '/dashboard/api-logs',       label: 'API logs',      icon: ScrollText      },
   { href: '/dashboard/playground',     label: 'Playground',    icon: Bot             },
   { href: '/dashboard/conversations',  label: 'Conversations', icon: MessageSquare   },
   { href: '/dashboard/integration',    label: 'Integration',   icon: Code2           },
