@@ -67,17 +67,16 @@ function csvCell(value: string) {
 }
 
 function downloadCredentialsCsv(keyInfo: CreatedKeyInfo) {
-  const csvRows = [
-    'Key Name,API Key Secret,Allowed Domains,Created At,Widget Embed Code',
-    [
-      keyInfo.name,
-      keyInfo.secret,
-      (keyInfo.domains.length ? keyInfo.domains : ['All origins']).join('; '),
-      keyInfo.createdAt,
-      widgetEmbedCode(keyInfo.secret),
-    ].map(csvCell).join(','),
+  const headers = ['Key Name', 'API Key Secret', 'Allowed Domains', 'Created At', 'Widget Embed Code']
+  const values = [
+    keyInfo.name,
+    keyInfo.secret,
+    (keyInfo.domains.length ? keyInfo.domains : ['All origins']).join('; '),
+    keyInfo.createdAt,
+    widgetEmbedCode(keyInfo.secret),
   ]
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const csv = [headers, values].map((row) => row.map(csvCell).join(',')).join('\r\n')
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -85,7 +84,7 @@ function downloadCredentialsCsv(keyInfo: CreatedKeyInfo) {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 function InfoTooltip({
