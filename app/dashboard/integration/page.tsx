@@ -328,8 +328,8 @@ await fetch('${API_URL}/api/v1/chat/', {
 <head>
   <meta charset="UTF-8" />
   <style>
-    html { width: 100%; height: 760px; min-height: 760px; overflow: hidden; background: transparent; }
-    body { width: 100%; height: 760px; min-height: 760px; margin: 0; overflow: hidden; background: transparent; }
+    html { width: 100%; height: 696px; min-height: 696px; overflow: hidden; background: transparent; }
+    body { width: 100%; height: 696px; min-height: 696px; margin: 0; overflow: hidden; background: transparent; }
   </style>
 </head>
 <body>
@@ -343,11 +343,11 @@ await fetch('${API_URL}/api/v1/chat/', {
 
               return (
                 <div key={`${build.id}-${apiKey}`} className="w-full max-w-[520px] min-w-0">
-                  <div className="h-[760px] min-h-[760px] w-full overflow-hidden rounded-xl border border-border bg-muted/20 shadow-sm">
+                  <div className="h-[696px] min-h-[696px] w-full overflow-hidden rounded-xl border border-border bg-muted/20 shadow-sm">
                     <iframe
                       srcDoc={iframeHtml}
                       title={build.label}
-                      className="block h-[760px] min-h-[760px] min-w-[500px] w-full border-0"
+                      className="block h-[696px] min-h-[696px] min-w-[500px] w-full border-0"
                       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                       scrolling="no"
                     />
