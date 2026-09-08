@@ -62,10 +62,10 @@ The platform must enforce tenant isolation on every document, vector, conversati
 
 WIDGET INTEGRATION
 
-The VectorBase widget is loaded from the CDN script URL https://vector-base.b-cdn.net/widget.js unless a workspace uses another configured widget build. The standard embed snippet is:
+The VectorBase widget is loaded from the CDN script URL https://saad1901.github.io/vbase/widget.js unless a workspace uses another configured widget build. The standard embed snippet is:
 
 <script
-  src="https://vector-base.b-cdn.net/widget.js"
+  src="https://saad1901.github.io/vbase/widget.js"
   data-api-key="YOUR_PUBLIC_API_KEY"
   defer>
 </script>

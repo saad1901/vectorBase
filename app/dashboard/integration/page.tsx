@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-const CDN_SCRIPT = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://vector-base.b-cdn.net/widget.js'
+const CDN_SCRIPT = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://saad1901.github.io/vbase/widget.js'
 
 type WidgetBuild = { id: string; label: string; url: string }
 

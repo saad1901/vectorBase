@@ -5,7 +5,7 @@ import { Check, Copy } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-const WIDGET_LINK = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://vector-base.b-cdn.net/widget.js'
+const WIDGET_LINK = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://saad1901.github.io/vbase/widget.js'
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)

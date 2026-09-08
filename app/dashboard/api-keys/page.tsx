@@ -14,7 +14,7 @@ import {
 } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-const WIDGET_LINK = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://vector-base.b-cdn.net/widget.js'
+const WIDGET_LINK = process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://saad1901.github.io/vbase/widget.js'
 
 const RAG_STRICTNESS_OPTIONS = [
   { value: 'no_rag', label: 'No RAG', info: 'Bypasses knowledge base grounding completely.' },

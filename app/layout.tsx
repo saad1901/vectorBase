@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
+const widgetLink = process.env.NEXT_PUBLIC_WIDGET_LINK
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
@@ -16,8 +18,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'vectorbase — Multi-tenant RAG infrastructure',
-  description: 'Build, monitor, and ship production-ready LLM retrieval experiences.',
+  title: 'VectorBase — Knowledge-grounded AI support',
+  description: 'Build, test, and embed tenant-isolated AI support chatbots grounded in your product knowledge.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -48,9 +50,9 @@ export default function RootLayout({
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
         {/* VectorBase chatbot widget */}
-        {process.env.NEXT_PUBLIC_PUBLIC_KEY && (
+        {widgetLink && process.env.NEXT_PUBLIC_PUBLIC_KEY && (
           <script
-            src={process.env.NEXT_PUBLIC_WIDGET_LINK || 'https://vector-base.b-cdn.net/widget.js'}
+            src={widgetLink}
             data-api-key={process.env.NEXT_PUBLIC_PUBLIC_KEY}
             defer
           />
