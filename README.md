@@ -16,8 +16,8 @@
 
 <br/>
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-vectorbase.vercel.app-22c55e?style=for-the-badge)](https://vectorbase.vercel.app)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Post-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://lnkd.in/p/dvC3myRs)
+<a href="https://vectorbase.vercel.app" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/🚀_Live_Demo-vectorbase.vercel.app-22c55e?style=for-the-badge" alt="Live Demo" /></a>
+<a href="https://lnkd.in/p/dvC3myRs" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/LinkedIn-Post-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
 
 <br/>
 
