@@ -62,7 +62,7 @@ The platform must enforce tenant isolation on every document, vector, conversati
 
 WIDGET INTEGRATION
 
-The VectorBase widget is loaded from the CDN script URL https://saad1901.github.io/vbase/widget.js unless a workspace uses another configured widget build. The standard embed snippet is:
+The VectorBase widget is loaded from the script URL https://saad1901.github.io/vbase/widget.js unless a workspace uses another configured widget build. The standard embed snippet is:
 
 <script
   src="https://saad1901.github.io/vbase/widget.js"
@@ -102,7 +102,7 @@ DIRECT API USAGE
 
 A server-side application can call the chat endpoint directly. Keep the API key in a server-side environment variable when possible.
 
-const response = await fetch('https://your-backend-domain/api/v1/chat', {
+const response = await fetch('https://easyai.fastapicloud.dev/api/v1/chat', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ RESPONSE GUIDELINES FOR THE VECTORBASE CHATBOT
 
 When asked how to start, explain: create a workspace, upload documents, wait for ingestion, test in Playground, create an API key with allowed domains, copy the Integration snippet, and deploy it.
 
-When asked how to add a widget, explain the CDN script, data-api-key, the built-in backend API URL, defer loading, allowed domains, and the POST /api/v1/chat behavior. The generated script only needs the CDN URL, API key, and defer loading.
+When asked how to add a widget, explain the script, data-api-key, the built-in backend API URL, defer loading, allowed domains, and the POST /api/v1/chat behavior. The generated script only needs the CDN URL, API key, and defer loading.
 
 When asked about prices, state the currently configured values: 10M for INR 249, 25M for INR 449, 50M for INR 799, and 1M add-on units for INR 29. Mention that prices may change and the Billing page or server catalog is authoritative.
 
