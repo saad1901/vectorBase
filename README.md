@@ -16,6 +16,11 @@
 
 <br/>
 
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-vectorbase.vercel.app-22c55e?style=for-the-badge)](https://vectorbase.vercel.app)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Post-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://lnkd.in/p/dvC3myRs)
+
+<br/>
+
 > **Upload your docs. Configure your AI. Embed your chatbot. Done.**
 >
 > VectorBase gives SaaS teams a production-ready RAG dashboard — tenant-isolated workspaces, document ingestion pipelines, a live chat playground, embeddable widgets, and an admin control plane, all in one place.
